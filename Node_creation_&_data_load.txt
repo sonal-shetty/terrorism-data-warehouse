@@ -1,0 +1,29 @@
+LOAD CSV WITH HEADERS FROM "file:///CSV\sales_stores.csv" as row CREATE (s:stores) SET s = {StoreID:row.store_id, StoreName:row.store_name, Phone:row.phone,Email:row.email,Street:row.street,City:row.city,State:row.state, ZipCode:row.zip_code} RETURN s
+CREATE CONSTRAINT FOR (s:stores) REQUIRE s.StoreID IS UNIQUE
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\sales_staffs.csv" as row CREATE (st:staffs) SET st = {StaffID:row.staff_id, FirstName:row.first_name, LastName:row.last_name, Email:row.email,Phone:row.phone,Active:row.active,StoreID:row.store_id,ManagerID:row.manager_id} RETURN st
+CREATE CONSTRAINT FOR (st:staffs) REQUIRE s.StaffID IS UNIQUE
+
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\sales_orders.csv" as row CREATE (o:orders) SET o = {OrderID:row.order_id, CustomerID:row.customer_id, OrderStatus:row.order_status, OrderDate:row.order_date, RequiredDate:row.required_date, ShippedDate:row.shipped_date, StoreID:row.store_id,StaffID:row.staff_id} RETURN o
+CREATE CONSTRAINT FOR (o:orders) REQUIRE o.OrderID IS UNIQUE
+
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\sales_order_items.csv" as row CREATE (oi:order_items) SET oi = {OrderID:row.order_id ,ItemID:row.item_id, ProductID:row.product_id, Quantity:row.quantity, ListPrice:row.list_price, Discount:row.discount} RETURN oi
+CREATE CONSTRAINT FOR (oi:order_items) REQUIRE (oi.OrderID,oi.ItemID) IS NODE KEY
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\sales_customers.csv" as row CREATE (c:customers) SET c = {CustomerID:row.customer_id ,FirstName:row.first_name, LastName:row.last_name, Phone:row.phone,Email:row.email,Street:row.street,City:row.city,State:row.state, ZipCode:row.zip_code} RETURN c
+CREATE CONSTRAINT FOR (c:customers) REQUIRE c.CustomerID IS UNIQUE
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\production_stocks.csv" as row CREATE (ps:stocks) SET ps = {StoreID:row.store_id ,ProductID:row.product_id, Quantity:row.quantity} RETURN ps
+CREATE CONSTRAINT FOR (ps:stocks) REQUIRE (ps.StoreID, ps.ProductID) IS NODE KEY
+
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\production_products.csv" as row CREATE (pp:products) SET pp = {ProductID:row.product_id, ProductName:row.product_name, BrandID:row.brand_id, CategoryID:row.category_id, ModelYear:row.model_year, ListPrice:row.list_price} RETURN pp
+CREATE CONSTRAINT FOR (pp:products) REQUIRE pp.ProductID IS UNIQUE
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\production_categories.csv" as row CREATE (pc:categories) SET pc = {CategoryID:row.category_id, CategoryName:row.category_name } RETURN pc
+CREATE CONSTRAINT FOR (pc:categories) REQUIRE pc.CategoryID IS UNIQUE
+
+LOAD CSV WITH HEADERS FROM "file:///CSV\production_brands.csv" as row CREATE (pb:brands) SET pb = {BrandID:row.brand_id, BrandName:row.brand_name } RETURN pb
+CREATE CONSTRAINT FOR (pb:brands) REQUIRE pb.BrandID IS UNIQUE

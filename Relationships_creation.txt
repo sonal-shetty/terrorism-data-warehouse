@@ -1,0 +1,32 @@
+MATCH (st1:staffs), (st2:staffs) WHERE st1.StaffID=st2.ManagerID CREATE (st1)-[r1:MANAGES]-> (st2) RETURN st1,st2,r1
+MATCH (st:staffs) REMOVE st.ManagerID RETURN st
+
+MATCH (st:staffs), (s:stores) WHERE st.StoreID=s.StoreID CREATE (st)-[r2:WORKS_AT]-> (s) RETURN st,s,r2
+MATCH (st:staffs) REMOVE st.StoreID RETURN st
+
+
+MATCH (o:orders), (c:customers) WHERE o.CustomerID = c.CustomerID CREATE (o)-[r3:ORDERED_BY] -> (c) RETURN o,c,r3
+MATCH (o:orders) REMOVE o.CustomerID RETURN o
+
+MATCH (o:orders), (st:stores) WHERE o.StoreID = st.StoreID CREATE (o)-[r4:ORDERED_AT] -> (st) RETURN o,st,r4
+MATCH (o:orders) REMOVE o.StoreID RETURN o
+
+MATCH (o:orders), (s:staffs) WHERE o.StaffID = s.StaffID CREATE (o)-[r5:ORDER_TAKEN_BY] -> (s) RETURN o,s,r5
+MATCH (o:orders) REMOVE o.StaffID RETURN o
+
+	
+MATCH (oi:order_items), (o:orders) WHERE oi.OrderID=o.OrderID CREATE (oi)-[r6:ITEM_DETAILS_OF] -> (o) RETURN oi,o,r6
+MATCH (oi:order_items) REMOVE oi.OrderID RETURN oi --- cant delete as part of uniqueness
+
+MATCH (oi:order_items), (p:products) WHERE oi.ProductID=p.ProductID CREATE (oi)-[r7:PRODUCT_DETAILS_OF] -> (p) RETURN oi,p,r7
+MATCH (oi:order_items) REMOVE oi.ProductID RETURN oi 
+
+MATCH (ps:stocks),(s:stores), (p:products) WHERE ps.StoreID=s.StoreID AND ps.ProductID=p.ProductID CREATE (p)-[r8: INVENTORY_DETAILS_OF{Quantity:ps.quantity}]- >(s)RETURN s,p,r8
+
+MATCH (p:products), (c:categories) WHERE p.CategoryID=c.CategoryID CREATE (p)-[r9:OF_CATEGORY] -> (c) RETURN p,c,r9
+MATCH (p:products) REMOVE p.CategoryID RETURN p
+
+MATCH (p:products), (pb:brands) WHERE p.BrandID=pb.BrandID CREATE (p)-[r10:OF_BRAND] -> (pb) RETURN p,pb,r10
+MATCH (p:products) REMOVE p.BrandID RETURN p
+
+

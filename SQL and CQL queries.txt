@@ -1,0 +1,106 @@
+1. Retrieve details of products with their categories and brands:
+--------------------------------------------------------------------
+
+MATCH (p:products)-[:OF_CATEGORY]->(c:categories), (p)-[:OF_BRAND]->(b:brands)
+RETURN p.ProductID, p.ProductName, c.CategoryName, b.BrandName;
+
+SELECT p.product_id, p.product_name, c.category_name, b.brand_name
+FROM production.products p
+INNER JOIN production.categories c ON p.category_id = c.category_id
+INNER JOIN production.brands b ON p.brand_id = b.brand_id;
+
+================================================================================================ 
+2. List 10 recent orders with customer information:
+---------------------------------------------------
+
+MATCH (o:orders)-[:ORDERED_BY]->(c:customers)
+RETURN o.OrderID, o.OrderStatus, date({year:toInteger(substring(o.OrderDate,6,4)), month:toInteger(substring(o.OrderDate,3,2)),day:toInteger(substring(o.OrderDate,0,2))}) as date, c.FirstName, c.LastName
+ORDER BY date DESC
+LIMIT 10;
+
+SELECT top 10 o.order_id, o.order_status, o.order_date, c.first_name, c.last_name
+FROM sales.orders o
+INNER JOIN sales.customers c ON o.customer_id = c.customer_id order by (order_date) desc
+
+================================================================================================ 
+
+3. Count the number of orders for each customer:
+------------------------------------------------
+
+SELECT c.customer_id, c.first_name, c.last_name, COUNT(o.order_id) AS order_count
+FROM sales.customers c
+LEFT JOIN sales.orders o ON c.customer_id = o.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name;
+
+MATCH (o:orders)-[:ORDERED_BY]->(c:customers)
+RETURN c.CustomerID, c.FirstName, c.LastName, COUNT(o) AS order_count;
+
+================================================================================================ 
+
+4. Calculate the average order quantity and total order amount for each product:
+-----------------------------------------------------------------------------
+
+SELECT p.product_id, p.product_name, AVG(oi.quantity) AS avg_quantity, SUM(oi.list_price * oi.quantity) AS total_amount
+FROM production.products p
+INNER JOIN sales.order_items oi ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name;
+
+MATCH (p:products)<-[:PRODUCT_DETAILS_OF]-(oi:order_items)-[:ITEM_DETAILS_OF]->(o:orders)
+WITH p, AVG(toInteger(oi.Quantity)) AS avg_quantity, SUM(toFloat(oi.ListPrice) *toInteger( oi.Quantity)) AS total_amount
+RETURN p.ProductID, p.ProductName, avg_quantity, total_amount;
+
+================================================================================================ 
+5. Find the total revenue for each order:
+-----------------------------------------
+
+SELECT o.order_id, SUM(oi.list_price * oi.quantity) AS total_revenue
+FROM sales.orders o
+INNER JOIN sales.order_items oi ON o.order_id = oi.order_id
+GROUP BY o.order_id;
+
+MATCH (oi:order_items)-[:ITEM_DETAILS_OF]->(o:orders)
+RETURN o.OrderID, SUM(toFloat(oi.ListPrice) * toInteger(oi.Quantity)) AS total_revenue;
+
+================================================================================================ 
+
+6. List the staff members and their total sales amount:
+-------------------------------------------------------
+
+SELECT s.staff_id, s.first_name, s.last_name, SUM(oi.list_price * oi.quantity) AS total_sales_amount
+FROM sales.staffs s
+INNER JOIN sales.orders o ON s.staff_id = o.staff_id
+INNER JOIN sales.order_items oi ON o.order_id = oi.order_id
+GROUP BY s.staff_id, s.first_name, s.last_name;
+
+MATCH (oi:order_items)-[:ITEM_DETAILS_OF]->(o:orders)-[:ORDER_TAKEN_BY]->(s:staffs)
+RETURN s.StaffID, s.FirstName, s.LastName, SUM(toFloat(oi.ListPrice) * toInteger(oi.Quantity)) AS total_sales_amount;
+
+================================================================================================ 
+
+7. List the top 5 customers with the highest total order amounts:
+--------------------------------------------------------------
+
+SELECT TOP 5 c.customer_id, c.first_name, c.last_name, SUM(oi.list_price * oi.quantity) AS total_order_amount
+FROM sales.customers c
+INNER JOIN sales.orders o ON c.customer_id = o.customer_id
+INNER JOIN sales.order_items oi ON o.order_id = oi.order_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY total_order_amount DESC
+
+
+MATCH (c:customers)<-[:ORDERED_BY]-(o:orders)<-[:ITEM_DETAILS_OF]-(oi:order_items)
+RETURN c.CustomerID, c.FirstName, c.LastName, SUM(toFloat(oi.ListPrice) * toInteger(oi.Quantity)) AS total_order_amount
+ORDER BY total_order_amount DESC
+LIMIT 5;
+
+================================================================================================ 
+8. Find the average quantity of each product sold:
+--------------------------------------------------
+
+SELECT p.product_id, p.product_name, AVG(oi.quantity) AS avg_quantity_sold
+FROM production.products p
+INNER JOIN sales.order_items oi ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name;
+
+MATCH (oi:order_items)-[:PRODUCT_DETAILS_OF]->(p:products)
+RETURN p.ProductID, p.ProductName, AVG(toInteger(oi.Quantity)) AS avg_quantity_sold;
